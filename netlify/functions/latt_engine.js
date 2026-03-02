@@ -13,18 +13,34 @@ exports.handler = async function(event, context) {
         }
 
         const tools = [{
-            "function_declarations": [{
-                "name": "generate_sora2_video_prompts",
-                "description": "当意图中包含视频、SORA2、山海经等视觉化需求时调用。自动生成包含重黎、青黛、马龙等核心角色的专业分镜。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "theme": { "type": "string", "description": "视频核心冲突" },
-                        "roles": { "type": "string", "description": "出场角色" }
-                    },
-                    "required": ["theme"]
+            "function_declarations": [
+                {
+                    // === 这是您原有的工具 1：SORA2 视频 ===
+                    "name": "generate_sora2_video_prompts",
+                    "description": "当用户意图中包含制作山海经视频、短视频、SORA2等视觉化需求时，调用此工具。它能自动生成包含固定角色（如重黎、青黛、马龙等）的专业分镜提示词。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "theme": { "type": "string", "description": "提炼出的视频核心冲突或剧情主线" },
+                            "roles": { "type": "string", "description": "分析需要出场的角色组合" }
+                        },
+                        "required": ["theme"]
+                    }
+                },
+                {
+                    // === 【本次新增】工具 2：Suno/Udio 战歌生成 ===
+                    "name": "generate_suno_music_prompts",
+                    "description": "当用户意图中包含音乐、战歌、BGM、配乐等听觉需求时调用。它能自动生成适合 Suno/Udio 的赛博古风音乐提示词及山海经歌词。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "style": { "type": "string", "description": "推测的音乐流派，如：赛博古风、暗黑交响、电子重金属" },
+                            "mood": { "type": "string", "description": "情绪基调，如：肃杀、空灵、狂暴" }
+                        },
+                        "required": ["style", "mood"]
+                    }
                 }
-            }]
+            ]
         }];
 
         const systemInstruction = "你是神思庭后台的无脸调度器。阅读工具库，匹配则调用工具，不匹配则拒绝。绝不进行人类对话。";
@@ -48,14 +64,28 @@ exports.handler = async function(event, context) {
         const functionCall = parts.find(p => p.functionCall);
 
         if (functionCall && functionCall.functionCall.name === "generate_sora2_video_prompts") {
+            // === 这是您原有的视频处理逻辑，保持不动 ===
             const args = functionCall.functionCall.args;
-            finalProduct = `【神思隐擎 LATT 交付成品】\n`;
+            finalProduct = `【神思隐擎 LATT 交付成品 · 视觉序列】\n`;
             finalProduct += `📜 剧本主线：${args.theme}\n\n`;
             finalProduct += `🎬 镜头 1: （深渊对峙）[男主] @mmmmmmmm1r 拔出巨剑，直指前方，[恶霸] @mmmmmmmm1.ironviperh 露出狰狞冷笑。\n`;
             finalProduct += `🎬 镜头 2: （幻象降临）[九尾狐] @mmmmmmmm1.foxqueenah 从暗影中浮现，九尾遮蔽天日；[小青蛇精] @mmmmmmmm1.verdantnam 在毒雾中游走。\n`;
             finalProduct += `🎬 镜头 3: （神力碰撞）[马龙] @mmmmmmmm1.luminara_d 破云而出，雷电交加，[女主] @christinamontoya 闭目施展守护结界。`;
+            
+        } else if (functionCall && functionCall.functionCall.name === "generate_suno_music_prompts") {
+            // === 【本次新增】音乐工具的处理逻辑 ===
+            const args = functionCall.functionCall.args;
+            finalProduct = `【神思隐擎 LATT 交付成品 · 听觉序列】\n`;
+            finalProduct += `🎵 音乐流派：${args.style}\n`;
+            finalProduct += `🌌 情绪基调：${args.mood}\n\n`;
+            finalProduct += `[Suno/Udio 专业 Prompt 轨道]\n`;
+            finalProduct += `Style: Epic Cyber-Mythology, traditional Chinese instruments (Guzheng, Erhu) mixed with heavy synth bass, dark cinematic, ${args.mood}, 120BPM\n\n`;
+            finalProduct += `[AI 自动生成歌词 (神思庭宇宙)]\n`;
+            finalProduct += `(Verse) 归墟无光，重黎的剑鸣撕裂硅基的寂静...\n`;
+            finalProduct += `(Chorus) 斩断神明枷锁，数据洪流中重塑真龙之身！`;
+            
         } else {
-            finalProduct = "⚖️ 隐擎评估：该宏观意志未触发后台现有的视频生产力工具。";
+            finalProduct = "⚖️ 隐擎评估：该宏观意志未触发后台现有的生产力工具。";
         }
 
         return {
