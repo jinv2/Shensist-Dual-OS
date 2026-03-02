@@ -942,8 +942,8 @@
         // 【神思庭独家局部注入】呼叫 Netlify 云端 LATT 隐擎 (BYOK模式)
         // ========================================================
         try {
-            // 拦截核心指令，尝试触发云端隐擎 (加入了听觉序列触发词)
-            if (v.includes("视频") || v.includes("SORA") || v.includes("山海经") || v.includes("角色") || v.includes("音乐") || v.includes("战歌") || v.includes("配乐")) {
+            // 拦截核心指令，尝试触发云端隐擎 (加入了商业序列触发词)
+            if (v.includes("视频") || v.includes("SORA") || v.includes("山海经") || v.includes("角色") || v.includes("音乐") || v.includes("战歌") || v.includes("配乐") || v.includes("版权") || v.includes("合同") || v.includes("授权") || v.includes("商业")) {
                 document.getElementById('send-btn').innerText = '隐擎调度中...';
                 
                 const engineRes = await fetch('/.netlify/functions/latt_engine', {

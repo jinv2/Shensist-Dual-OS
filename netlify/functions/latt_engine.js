@@ -39,6 +39,19 @@ exports.handler = async function(event, context) {
                         },
                         "required": ["style", "mood"]
                     }
+                },
+                {
+                    // === 【本次新增】工具 3：商务版权与合约生成 ===
+                    "name": "generate_copyright_contract",
+                    "description": "当用户意图中包含版权、授权、商业谈判、合同、售卖 IP 等商业需求时调用。它能自动生成极其专业、带有神思庭数字主权宣誓的商业合约或公函。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "target_buyer": { "type": "string", "description": "谈判对手或买方的名称" },
+                            "core_terms": { "type": "string", "description": "我方坚守的核心条款、价格或底线" }
+                        },
+                        "required": ["target_buyer", "core_terms"]
+                    }
                 }
             ]
         }];
@@ -83,6 +96,21 @@ exports.handler = async function(event, context) {
             finalProduct += `[AI 自动生成歌词 (神思庭宇宙)]\n`;
             finalProduct += `(Verse) 归墟无光，重黎的剑鸣撕裂硅基的寂静...\n`;
             finalProduct += `(Chorus) 斩断神明枷锁，数据洪流中重塑真龙之身！`;
+            
+        } else if (functionCall && functionCall.functionCall.name === "generate_copyright_contract") {
+            // === 【本次新增】商业合约处理逻辑 ===
+            const args = functionCall.functionCall.args;
+            const hashSign = "0x" + Math.random().toString(16).substring(2, 10) + "Shensist"; // 模拟生成区块链验签哈希
+            
+            finalProduct = `【神思隐擎 LATT 交付成品 · 数字版权公函】\n`;
+            finalProduct += `==============================================\n`;
+            finalProduct += `致：${args.target_buyer}\n\n`;
+            finalProduct += `基于神思庭 Web4 造物主协议，现向贵方发送以下授权意向：\n`;
+            finalProduct += `1. 核心条款声明：${args.core_terms}\n`;
+            finalProduct += `2. 数字主权底线：神思庭保留《山海经》核心矩阵（重黎、青黛、马龙等）的最高宇宙解释权与衍生品控制权。贵方仅获得该条款下的切片使用权。\n\n`;
+            finalProduct += `[系统签发完毕] 防伪链上哈希：${hashSign}\n`;
+            finalProduct += `==============================================\n`;
+            finalProduct += `⚠️ 若贵方同意，请将算力注入智信终端进行链上确认。`;
             
         } else {
             finalProduct = "⚖️ 隐擎评估：该宏观意志未触发后台现有的生产力工具。";
