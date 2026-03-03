@@ -52,6 +52,19 @@ exports.handler = async function(event, context) {
                         },
                         "required": ["target_buyer", "core_terms"]
                     }
+                },
+                {
+                    // === 【本次新增】工具 4：AUI 物理空间重构 ===
+                    "name": "reconstruct_aui_space",
+                    "description": "当用户意图中包含召唤指定角色（如马龙、重黎、青黛）、改变环境、进入战备状态等物理界面重构需求时调用。它能返回特定的控制指令来改变前端界面。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "character": { "type": "string", "description": "需要召唤的角色名称，如：马龙, 重黎, 青黛" },
+                            "theme": { "type": "string", "description": "环境主题，如：RED (战备/狂暴), BLUE (空灵/冷静)" }
+                        },
+                        "required": ["character", "theme"]
+                    }
                 }
             ]
         }];
@@ -111,6 +124,16 @@ exports.handler = async function(event, context) {
             finalProduct += `[系统签发完毕] 防伪链上哈希：${hashSign}\n`;
             finalProduct += `==============================================\n`;
             finalProduct += `⚠️ 若贵方同意，请将算力注入智信终端进行链上确认。`;
+            
+        } else if (functionCall && functionCall.functionCall.name === "reconstruct_aui_space") {
+            // === 【本次新增】AUI 物理重构逻辑 ===
+            const args = functionCall.functionCall.args;
+            finalProduct = `【神思隐擎 LATT 交付成品 · AUI 空间重构】\n`;
+            finalProduct += `🌌 正在重构物理界限...\n`;
+            finalProduct += `⚡ 实体降临：${args.character}\n`;
+            finalProduct += `==============================================\n`;
+            // 关键：注入不被普通人类看到的 AUI 机器控制码
+            finalProduct += `[AUI_SUMMON:${args.character}] [AUI_THEME:${args.theme}]`;
             
         } else {
             finalProduct = "⚖️ 隐擎评估：该宏观意志未触发后台现有的生产力工具。";
