@@ -557,6 +557,7 @@
     let currentPeer = null;
     let activeConnection = null;
     let currentTargetId = 'ZX-TEST';
+    let isTurnNodeAnnounced = false;
 
     window.onload = function() {
         if(window.innerWidth <= 768) document.getElementById('close-sidebar-btn').style.display = 'block';
@@ -668,7 +669,10 @@
         
         currentPeer.on('open', (id) => {
             console.log('WebRTC 节点锚定成功:', id);
-            renderSys(`🌐 节点已上线 (微信级 TURN 中继已就绪)`);
+            if (!isTurnNodeAnnounced) {
+                renderSys(`🌐 节点已上线 (微信级 TURN 中继已就绪)`);
+                isTurnNodeAnnounced = true;
+            }
         });
 
         currentPeer.on('connection', (conn) => {
@@ -683,6 +687,7 @@
 
         currentPeer.on('disconnected', () => {
             document.getElementById('p2p-status-icon').innerText = "🟡 信号重连中...";
+            isTurnNodeAnnounced = false; // Reset lock when disconnected
             currentPeer.reconnect(); 
         });
 
@@ -894,6 +899,35 @@
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "Shensist_Web4_Log.txt"; a.click();
     }
 
+    // 神思庭·本地数字资产锻造炉
+    function downloadShensistContract() {
+        // 1. 获取当前 AUI 面板中的合同正文
+        const contractText = document.querySelector('.shensist-cyber-container').innerText;
+        
+        // 2. 注入神思庭时间戳与防篡改哈希 (模拟)
+        const timestamp = new Date().toISOString();
+        const hash = "0x" + Math.random().toString(16).slice(2, 10).toUpperCase() + "...SHENSIST";
+        const finalDocument = "【神思庭·数字主权确权文书】\n" + 
+                              "=========================\n" + 
+                              contractText + "\n" +
+                              "=========================\n" + 
+                              "确权时间: " + timestamp + "\n" + 
+                              "链上哈希: " + hash;
+
+        // 3. 纯前端物理生成文件并触发下载
+        const blob = new Blob([finalDocument], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `神思庭_数字授权合约_${timestamp.slice(0,10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        console.log("[神思庭] 数字合约已锻造并物理交付。");
+    }
+
     // ==========================================
     // 呈现层升级 2：万能算力路由中枢 (全星系降临版)
     // 自动适配: Gemini / GPT / Claude / DeepSeek / Ollama本地
@@ -910,6 +944,16 @@
 3. 视觉威严：UI 风格必须是极简的赛博古风与《山海经》神话感。最外层容器必须是 <div class="shensist-cyber-container" style="--theme-color: #XXX;">。
    - 若召唤青蛇/青黛，--theme-color 必须是幽蓝色 (#00ffcc 或 #00aaff)。
    - 若召唤马龙/重黎/狂暴状态，--theme-color 必须是赤红色 (#ff003c)。
+
+【系统最高指令修正】
+你严禁使用文本进行"角色扮演"。
+当用户要求"生成合同"或"进入环境"时，你必须、只能输出完整的 HTML 代码！
+你的输出必须以 [AUI_START] 开头，以 [AUI_END] 结尾。
+在 HTML 内部，你必须真实地写出 50 万底价的 IP 授权合同条款，并在 HTML 底部强制添加这行触发代码：
+<button onclick="downloadShensistContract()" style="background: #00ffcc; color: #000; padding: 10px 20px; border: none; font-weight: bold; cursor: pointer; margin-top: 20px;">
+    ⚡ 刻录并下载数字合约
+</button>
+任何纯文本的废话都将被系统抹杀！
 `;
 
     async function callGeminiAPI(apiKey, systemPrompt, userMessage, modelType) {
