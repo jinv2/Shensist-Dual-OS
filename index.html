@@ -942,26 +942,56 @@
         // 【神思庭独家局部注入】呼叫 Netlify 云端 LATT 隐擎 (BYOK模式)
         // ========================================================
         try {
-            // 拦截核心指令，尝试触发云端隐擎 (加入了商业序列触发词)
-            if (v.includes("视频") || v.includes("SORA") || v.includes("山海经") || v.includes("角色") || v.includes("音乐") || v.includes("战歌") || v.includes("配乐") || v.includes("版权") || v.includes("合同") || v.includes("授权") || v.includes("商业")) {
+            // 拦截核心指令 (加入了召唤、环境、降临等 AUI 触发词)
+            if (v.includes("视频") || v.includes("SORA") || v.includes("山海经") || v.includes("角色") || v.includes("音乐") || v.includes("战歌") || v.includes("配乐") || v.includes("版权") || v.includes("合同") || v.includes("授权") || v.includes("商业") || v.includes("召唤") || v.includes("降临") || v.includes("环境")) {
                 document.getElementById('send-btn').innerText = '隐擎调度中...';
                 
                 const engineRes = await fetch('/.netlify/functions/latt_engine', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        zx_id: myZxId, 
-                        intent: v,
-                        apiKey: apiKey,       // 消耗客户自己填写的算力凭证
-                        model: targetModel    
+                        zx_id: myZxId, intent: v, apiKey: apiKey, model: targetModel    
                     })
                 });
                 
                 if (engineRes.ok) {
                     const engineData = await engineRes.json();
-                    renderSys(`⚙️ <b>LATT 隐擎已完成自动生产：</b><br><pre style="color:#00ff00; font-family:monospace; white-space: pre-wrap; margin-top:10px; font-size:12px;">${engineData.result}</pre>`);
-                    resetBtn('无面工作流执行完毕');
-                    return; // 隐擎交付成品后，直接阻断，保护原有的 GUI/AUI 聊天对撞逻辑
+                    let resultText = engineData.result;
+                    
+                    // ==========================================
+                    // 🚨 【高维逻辑】前端截获 AUI 机器码并执行物理控制
+                    // ==========================================
+                    const summonMatch = resultText.match(/\[AUI_SUMMON:(.*?)\]/);
+                    const themeMatch = resultText.match(/\[AUI_THEME:(.*?)\]/);
+                    
+                    if (summonMatch) {
+                        const charName = summonMatch[1];
+                        let imgPath = 'https://raw.githubusercontent.com/jinv2/Shensist-Proxy/main/logo_ts.png';
+                        if(charName.includes('重黎')) imgPath = './重黎.png';
+                        if(charName.includes('青黛') || charName.includes('青蛇')) imgPath = './青黛.png';
+                        if(charName.includes('马龙') || charName.includes('真龙')) imgPath = './马龙.png';
+                        if(charName.includes('涂山影')) imgPath = './涂山影.png';
+                        
+                        // 强制覆盖视频框内容 (AUI 显化)
+                        document.getElementById('video-display').innerHTML = `<img src="${imgPath}" onerror="this.outerHTML='<span style=\\'color:#ff1a4d\\'>[AUI 幻象重构] 正在渲染 ${charName} 视觉流...</span>'">`;
+                    }
+                    
+                    if (themeMatch) {
+                        const theme = themeMatch[1];
+                        // 强制修改环境光影 (AUI 结界)
+                        if (theme === 'RED') {
+                            document.querySelector('.app-wrapper').style.boxShadow = 'inset 0 0 100px rgba(255,26,77,0.15)';
+                        } else if (theme === 'BLUE') {
+                            document.querySelector('.app-wrapper').style.boxShadow = 'inset 0 0 100px rgba(0,242,255,0.15)';
+                        }
+                    }
+                    
+                    // 清理机器码，人类只看到纯净的文本结果
+                    resultText = resultText.replace(/\[AUI_SUMMON:.*?\]/g, '').replace(/\[AUI_THEME:.*?\]/g, '').trim();
+
+                    renderSys(`⚙️ <b>LATT 隐擎已完成 AUI 空间重构：</b><br><pre style="color:#00ff00; font-family:monospace; white-space: pre-wrap; margin-top:10px; font-size:12px;">${resultText}</pre>`);
+                    resetBtn('神殿幻象已刷新');
+                    return; 
                 }
             }
         } catch(e) {
