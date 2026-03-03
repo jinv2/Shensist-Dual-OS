@@ -939,10 +939,9 @@
         if(targetModel === 'custom') targetModel = document.getElementById('custom-model-input').value;
 
         // ========================================================
-        // 【神思庭独家局部注入】呼叫 Netlify 云端 LATT 隐擎 (BYOK模式)
+        // 【神思庭独家】绝对拦截网关 (全域 LATT 触发器)
         // ========================================================
         try {
-            // 拦截核心指令 (加入了召唤、环境、降临等 AUI 触发词)
             if (v.includes("视频") || v.includes("SORA") || v.includes("山海经") || v.includes("角色") || v.includes("音乐") || v.includes("战歌") || v.includes("配乐") || v.includes("版权") || v.includes("合同") || v.includes("授权") || v.includes("商业") || v.includes("召唤") || v.includes("降临") || v.includes("环境")) {
                 document.getElementById('send-btn').innerText = '隐擎调度中...';
                 
@@ -958,9 +957,7 @@
                     const engineData = await engineRes.json();
                     let resultText = engineData.result;
                     
-                    // ==========================================
-                    // 🚨 【高维逻辑】前端截获 AUI 机器码并执行物理控制
-                    // ==========================================
+                    // AUI 物理解析引擎
                     const summonMatch = resultText.match(/\[AUI_SUMMON:(.*?)\]/);
                     const themeMatch = resultText.match(/\[AUI_THEME:(.*?)\]/);
                     
@@ -972,13 +969,11 @@
                         if(charName.includes('马龙') || charName.includes('真龙')) imgPath = './马龙.png';
                         if(charName.includes('涂山影')) imgPath = './涂山影.png';
                         
-                        // 强制覆盖视频框内容 (AUI 显化)
-                        document.getElementById('video-display').innerHTML = `<img src="${imgPath}" onerror="this.outerHTML='<span style=\\'color:#ff1a4d\\'>[AUI 幻象重构] 正在渲染 ${charName} 视觉流...</span>'">`;
+                        document.getElementById('video-display').innerHTML = `<img src="${imgPath}" onerror="this.outerHTML='<span style=\\'color:#ff1a4d; font-weight:bold;\\'>[AUI 幻象重构] 正在渲染 ${charName} 视觉流...</span>'">`;
                     }
                     
                     if (themeMatch) {
                         const theme = themeMatch[1];
-                        // 强制修改环境光影 (AUI 结界)
                         if (theme === 'RED') {
                             document.querySelector('.app-wrapper').style.boxShadow = 'inset 0 0 100px rgba(255,26,77,0.15)';
                         } else if (theme === 'BLUE') {
@@ -986,7 +981,7 @@
                         }
                     }
                     
-                    // 清理机器码，人类只看到纯净的文本结果
+                    // 清理机器控制码
                     resultText = resultText.replace(/\[AUI_SUMMON:.*?\]/g, '').replace(/\[AUI_THEME:.*?\]/g, '').trim();
 
                     renderSys(`⚙️ <b>LATT 隐擎已完成 AUI 空间重构：</b><br><pre style="color:#00ff00; font-family:monospace; white-space: pre-wrap; margin-top:10px; font-size:12px;">${resultText}</pre>`);
@@ -995,7 +990,7 @@
                 }
             }
         } catch(e) {
-            console.log("云端 LATT 隐擎未响应或未触发，自动进入智信前台对撞模式。");
+            console.log("云端 LATT 隐擎未响应，降级为沙盒模式。");
         }
         // ========================================================
 
