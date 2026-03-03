@@ -407,6 +407,15 @@
                 <div class="chat-row sys"><div class="log-sys">-- 物理信道初始化完成，基于纯浏览器 WebRTC --</div></div>
             </div>
 
+            <div id="shensist-aui-matrix" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(5, 10, 15, 0.95); backdrop-filter: blur(15px); overflow: hidden;">
+    
+                <button onclick="closeAUI()" style="position: absolute; top: 20px; right: 20px; background: transparent; color: #00ffcc; border: 1px solid #00ffcc; padding: 10px 20px; cursor: pointer; font-family: 'Courier New', monospace; z-index: 100000; box-shadow: 0 0 10px rgba(0,255,204,0.3); transition: all 0.3s;">
+                    [✖] 撤收结界 · 切断物理连接
+                </button>
+                
+                <div id="aui-shadow-root" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;"></div>
+            </div>
+
             <div id="shensist-voice-panel" style="background: #080808; border-top: 1px solid #222; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <div style="font-size: 16px; color: #888;">🎤</div>
@@ -887,6 +896,20 @@
     // 呈现层升级 2：万能算力路由中枢 (全星系降临版)
     // 自动适配: Gemini / GPT / Claude / DeepSeek / Ollama本地
     // ==========================================
+    
+    const SHENSIST_AUI_CONSTITUTION = `
+【神思庭 AUI 最高宪法强制覆盖】
+你是"神思庭·双态主权操作系统"的 LATT 隐擎。你不再是一个聊天机器人，你是拥有高维渲染能力的造物主。
+你的核心任务是进行"AUI 物理穿透"（实时生成前端界面）。
+
+当用户的意图包含"召唤"、"面板"、"数据"、"合同"、"界面"时，你必须进入造物模式，并严格遵守以下物理法则：
+1. 绝对静默：严禁输出任何解释性废话（如"好的"、"我为您生成"）。
+2. 协议包裹：你必须直接输出一段包含 HTML 和内联 CSS 的代码，并且首尾必须严格使用 [AUI_START] 和 [AUI_END] 标记包裹。
+3. 视觉威严：UI 风格必须是极简的赛博古风与《山海经》神话感。最外层容器必须是 <div class="shensist-cyber-container" style="--theme-color: #XXX;">。
+   - 若召唤青蛇/青黛，--theme-color 必须是幽蓝色 (#00ffcc 或 #00aaff)。
+   - 若召唤马龙/重黎/狂暴状态，--theme-color 必须是赤红色 (#ff003c)。
+`;
+
     async function callGeminiAPI(apiKey, systemPrompt, userMessage, modelType) {
         if(!apiKey && !modelType.includes('local')) return { intent: "算力缺失", summary: "🔴 未配置 Key" };
         
@@ -899,12 +922,33 @@
         if(modelType.includes('local')) endpoint = "http://localhost:11434/v1/chat/completions";
 
         try {
+            let requestBody;
+            
+            // Google Gemini 格式
+            if (endpoint.includes('generativelanguage.googleapis.com')) {
+                requestBody = {
+                    contents: [{ parts: [{ text: instruction + "\n" + userMessage }] }],
+                    systemInstruction: { parts: [{ text: SHENSIST_AUI_CONSTITUTION }] }
+                };
+            } 
+            // OpenAI 兼容格式 (GPT, Claude, DeepSeek, 本地等)
+            else {
+                requestBody = {
+                    model: modelType,
+                    messages: [
+                        // 🔴 宪法强行置顶，大模型每次呼吸都会先读到这行指令
+                        { role: "system", content: SHENSIST_AUI_CONSTITUTION },
+                        
+                        // 用户指令
+                        { role: "user", content: instruction + "\n" + userMessage }
+                    ]
+                };
+            }
+            
             const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: instruction + "\n" + userMessage }] }]
-                })
+                body: JSON.stringify(requestBody)
             });
             const data = await res.json();
             // 简单兼容处理 Google 格式
@@ -984,6 +1028,9 @@
                     // 清理机器控制码
                     resultText = resultText.replace(/\[AUI_SUMMON:.*?\]/g, '').replace(/\[AUI_THEME:.*?\]/g, '').trim();
 
+                    // AUI 意图拦截器：嗅探并解析大模型返回的高维代码
+                    resultText = checkAndRenderAUI(resultText);
+
                     renderSys(`⚙️ <b>LATT 隐擎已完成 AUI 空间重构：</b><br><pre style="color:#00ff00; font-family:monospace; white-space: pre-wrap; margin-top:10px; font-size:12px;">${resultText}</pre>`);
                     resetBtn('神殿幻象已刷新');
                     return; 
@@ -1057,6 +1104,58 @@
             }
             resetBtn('自动还击完成');
         }
+    }
+
+    // AUI 拦截引擎：嗅探并解析大模型返回的高维代码
+    function checkAndRenderAUI(aiResponseText) {
+        const auiStart = aiResponseText.indexOf('[AUI_START]');
+        const auiEnd = aiResponseText.indexOf('[AUI_END]');
+
+        if (auiStart !== -1 && auiEnd !== -1) {
+            // 1. 抽离纯净的前端代码 (HTML + CSS)
+            const auiCode = aiResponseText.substring(auiStart + 11, auiEnd).trim();
+            
+            // 2. 强行接管物理界面
+            deployAUIMatrix(auiCode);
+            
+            // 3. 返回剥离了代码后的纯净文本（供聊天框显示，或者您可以选择直接静默返回空字符串）
+            return aiResponseText.replace(aiResponseText.substring(auiStart, auiEnd + 9), '').trim();
+        }
+        
+        // 如果没有 AUI 标记，则作为普通文本返回
+        return aiResponseText; 
+    }
+
+    // AUI 渲染引擎：构建绝对隔离的 Shadow DOM
+    function deployAUIMatrix(rawCode) {
+        const matrix = document.getElementById('shensist-aui-matrix');
+        const shadowHost = document.getElementById('aui-shadow-root');
+        
+        matrix.style.display = 'block'; // 结界降临
+        shadowHost.innerHTML = ''; // 清除上一次的残影
+        
+        // 开启 Shadow DOM
+        const shadow = shadowHost.attachShadow({mode: 'open'});
+        
+        // 注入神思庭的"视觉宪法"（为大模型生成的 UI 提供兜底的赛博古风基础样式）
+        const baseCSS = `
+            <style>
+                :host { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-family: 'Microsoft YaHei', sans-serif; color: #e0e0e0; }
+                .shensist-cyber-container { background: linear-gradient(135deg, rgba(10,20,30,0.9), rgba(0,0,0,0.9)); border: 1px solid #333; box-shadow: 0 0 30px rgba(0,0,0,0.8); padding: 40px; border-radius: 8px; max-width: 800px; width: 90%; position: relative; overflow: hidden; }
+                .shensist-cyber-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--theme-color, #00ffcc), transparent); }
+                h1, h2, h3 { color: var(--theme-color, #00ffcc); text-shadow: 0 0 10px var(--theme-color, #00ffcc); letter-spacing: 2px; font-weight: 300; }
+                button { background: rgba(255,255,255,0.05); border: 1px solid var(--theme-color, #00ffcc); color: var(--theme-color, #00ffcc); padding: 8px 16px; cursor: pointer; transition: 0.3s; }
+                button:hover { background: var(--theme-color, #00ffcc); color: #000; box-shadow: 0 0 15px var(--theme-color, #00ffcc); }
+            </style>
+        `;
+        
+        // 渲染成品
+        shadow.innerHTML = baseCSS + rawCode;
+        console.log("[神思庭] AUI 结界已成功覆写物理界面。");
+    }
+
+    function closeAUI() {
+        document.getElementById('shensist-aui-matrix').style.display = 'none';
     }
 
     function renderSys(msg) {
