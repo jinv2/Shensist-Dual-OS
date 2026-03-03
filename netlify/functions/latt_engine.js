@@ -136,7 +136,13 @@ exports.handler = async function(event, context) {
             finalProduct += `[AUI_SUMMON:${args.character}] [AUI_THEME:${args.theme}]`;
             
         } else {
-            finalProduct = "⚖️ 隐擎评估：该宏观意志未触发后台现有的生产力工具。";
+            // 【修正逻辑】当没有匹配到本地工具时，直接返回 LLM 的文本响应
+            const textContent = parts.find(p => p.text)?.text || "";
+            if (textContent.trim()) {
+                finalProduct = textContent;
+            } else {
+                finalProduct = "⚖️ 隐引擎评估：未能解析有效响应。";
+            }
         }
 
         return {

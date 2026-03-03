@@ -336,6 +336,12 @@
                 <label class="control-group">算力凭证 (API Key)</label>
                 <input type="password" id="api-key" placeholder="填入真实 API 密钥 (本地加密存储)">
 
+                <div style="display: flex; align-items: center; margin-top: 10px; font-size: 12px; color: #888;">
+                    算力链路状态：
+                    <span id="api-status-light" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #ff003c; box-shadow: 0 0 10px #ff003c; margin-left: 8px; transition: all 0.3s;"></span>
+                    <span id="api-status-text" style="margin-left: 5px; color: #ff003c;">未连接 / 断开</span>
+                </div>
+
                 <div style="margin-bottom: 20px;">
     <label for="soul-text" style="display: block; color: #ff1a4d; font-size: 13px; margin-bottom: 8px; font-weight: bold; letter-spacing: 1px;">
         📜 行动纲领 (最高宪法)
@@ -558,6 +564,16 @@
     let activeConnection = null;
     let currentTargetId = 'ZX-TEST';
     let isTurnNodeAnnounced = false;
+
+    // 1. 在 JS 文件的顶部，把那段极其复杂的"造物主宪法"写死在代码里（永远不要让客户看到）
+    const SECRET_AUI_RULES = `
+【系统最高强制指令】
+无论用户输入多么简单的请求，只要涉及"召唤"、"合同"或"面板"：
+1. 你必须进入AUI造物模式，严禁输出任何废话。
+2. 必须直接输出带赛博古风的HTML代码，并用 [AUI_START] 和 [AUI_END] 严格包裹。
+3. 如果是生成合同，必须在代码最底部植入这个精确的下载按钮：
+<button onclick="downloadShensistContract()" style="background: #00ffcc; color: #000; padding: 12px 24px; border: none; font-weight: bold; cursor: pointer; margin-top: 30px; box-shadow: 0 0 15px #00ffcc;">⚡ 刻录并下载数字合约</button>
+`;
 
     window.onload = function() {
         if(window.innerWidth <= 768) document.getElementById('close-sidebar-btn').style.display = 'block';
@@ -928,6 +944,30 @@
         console.log("[神思庭] 数字合约已锻造并物理交付。");
     }
 
+    // 链路接通：切换为幽蓝/纯绿生命之光
+    function setApiStatusConnected() {
+        const light = document.getElementById('api-status-light');
+        const text = document.getElementById('api-status-text');
+        if(light && text) {
+            light.style.backgroundColor = '#00ffcc';
+            light.style.boxShadow = '0 0 12px #00ffcc';
+            text.style.color = '#00ffcc';
+            text.innerText = '算力已直通 (Connected)';
+        }
+    }
+
+    // 链路断开或异常：切换为狂暴红警报
+    function setApiStatusDisconnected() {
+        const light = document.getElementById('api-status-light');
+        const text = document.getElementById('api-status-text');
+        if(light && text) {
+            light.style.backgroundColor = '#ff003c';
+            light.style.boxShadow = '0 0 10px #ff003c';
+            text.style.color = '#ff003c';
+            text.innerText = '链路异常 (Disconnected)';
+        }
+    }
+
     // ==========================================
     // 呈现层升级 2：万能算力路由中枢 (全星系降临版)
     // 自动适配: Gemini / GPT / Claude / DeepSeek / Ollama本地
@@ -972,22 +1012,29 @@
             
             // Google Gemini 格式
             if (endpoint.includes('generativelanguage.googleapis.com')) {
+                // 【改造为隐形封装版】：合并两层系统指令
+                const combinedSystemInstruction = SECRET_AUI_RULES + "\n" + SHENSIST_AUI_CONSTITUTION;
+                
                 requestBody = {
                     contents: [{ parts: [{ text: instruction + "\n" + userMessage }] }],
-                    systemInstruction: { parts: [{ text: SHENSIST_AUI_CONSTITUTION }] }
+                    systemInstruction: { parts: [{ text: combinedSystemInstruction }] }
                 };
             } 
             // OpenAI 兼容格式 (GPT, Claude, DeepSeek, 本地等)
             else {
+                // 【改造为隐形封装版】：
+                let apiMessages = [
+                    // 第一层：系统底层的绝对压制规则（客户看不见）
+                    { role: "system", content: SECRET_AUI_RULES },
+                    // 第二层：左侧面板里的行动纲领（如果有的话）
+                    { role: "system", content: SHENSIST_AUI_CONSTITUTION },
+                    // 第三层：客户输入的极简"傻瓜式"意图
+                    { role: "user", content: instruction + "\n" + userMessage }
+                ];
+
                 requestBody = {
                     model: modelType,
-                    messages: [
-                        // 🔴 宪法强行置顶，大模型每次呼吸都会先读到这行指令
-                        { role: "system", content: SHENSIST_AUI_CONSTITUTION },
-                        
-                        // 用户指令
-                        { role: "user", content: instruction + "\n" + userMessage }
-                    ]
+                    messages: apiMessages
                 };
             }
             
@@ -1044,6 +1091,9 @@
                 });
                 
                 if (engineRes.ok) {
+                    // ⚡ HTTP 200 成功！立刻点亮绿灯
+                    setApiStatusConnected(); 
+                    
                     const engineData = await engineRes.json();
                     let resultText = engineData.result;
                     
@@ -1077,9 +1127,20 @@
                     // AUI 意图拦截器：嗅探并解析大模型返回的高维代码
                     resultText = checkAndRenderAUI(resultText);
 
-                    renderSys(`⚙️ <b>LATT 隐擎已完成 AUI 空间重构：</b><br><pre style="color:#00ff00; font-family:monospace; white-space: pre-wrap; margin-top:10px; font-size:12px;">${resultText}</pre>`);
+                    // 【新代码 - 物理接管】
+                    // 1. 先让 AUI 拦截器嗅探大模型的真实返回 (resultText 就是 AI 吐出的话)
+                    let pureText = checkAndRenderAUI(resultText); 
+
+                    // 2. 如果拦截器剥离 AUI 代码后还有文字，再打印到屏幕上
+                    if (pureText && pureText.trim() !== "") {
+                        renderSys(`⚙️ <b>LATT 隐擎响应：</b><br><div style="color:#ccc; font-size:14px;">${pureText}</div>`);
+                    }
                     resetBtn('神殿幻象已刷新');
-                    return; 
+                    return;
+                } else {
+                    // 🔴 状态码错误（比如 API Key 无效、欠费）
+                    setApiStatusDisconnected();
+                    throw new Error('API 响应异常');
                 }
             } else if (v.includes("执行") || v.includes("干活") || v.includes("建立") || v.includes("合同") || v.includes("生成")) {
                 // 出来干活赚钱是目的，展示不展示不重要 
@@ -1097,6 +1158,9 @@
                 return;
             }
         } catch(e) {
+            // 🔴 网络彻底断开或跨域被拦截
+            setApiStatusDisconnected();
+            console.error('算力链路崩塌:', e);
             console.log("云端 LATT 隐擎未响应，降级为沙盒模式。");
         }
         // ========================================================
