@@ -2,24 +2,31 @@
 const fs = require('fs');
 
 exports.handler = async (event) => {
+    // 1. 尸检级防御：解析 body
     const body = JSON.parse(event.body || "{}");
-    const params = body.params || {}; // 增加容错
+    
+    // 2. 核心对齐：提取 action 和 params (解决 ReferenceError)
+    const action = body.action || "UNKNOWN"; // 确保 action 被定义
+    const params = body.params || {}; 
     const data = params.data || [{ item: "默认项目", price: "0", right: "无" }]; 
     
-    // 逻辑让 AI 有规则，行为让 AI 有回应 
-    if (action === 'GENERATE_BUSINESS_DOC') {
-        // 行为：不再回复文字，而是直接生成一个真实的 .csv (Excel可开) 文件内容
-        const csvContent = "项目,金额,权益\n" + data.map(d => `${d.item},${d.price},${d.right}`).join("\n");
-        
-        // 将文件内容转为 Base64，让客户能直接下载
-        return {
-            statusCode: 200,
-            headers: {
-                "Content-Type": "text/csv",
-                "Content-Disposition": `attachment; filename="Shensist_Contract_${Date.now()}.csv"` 
-            },
-            body: Buffer.from(csvContent).toString('base64'),
-            isBase64Encoded: true
-        };
+    // 3. 执行逻辑
+    try {
+        if (action === 'GENERATE_BUSINESS_DOC') {
+            const csvContent = "项目,金额,权益\n" + data.map(d => `${d.item},${d.price},${d.right}`).join("\n");
+            
+            return {
+                statusCode: 200,
+                headers: {
+                    "Content-Type": "text/csv",
+                    "Content-Disposition": `attachment; filename="Shensist_Contract_${Date.now()}.csv"` 
+                },
+                body: Buffer.from(csvContent).toString('base64'),
+                isBase64Encoded: true
+            };
+        }
+        return { statusCode: 400, body: "未识别的行为指令" };
+    } catch (err) {
+        return { statusCode: 500, body: err.message };
     }
 };
