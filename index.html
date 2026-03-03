@@ -567,12 +567,14 @@
 
     // 1. 在 JS 文件的顶部，把那段极其复杂的"造物主宪法"写死在代码里（永远不要让客户看到）
     const SECRET_AUI_RULES = `
-【系统最高强制指令】
-无论用户输入多么简单的请求，只要涉及"召唤"、"合同"或"面板"：
-1. 你必须进入AUI造物模式，严禁输出任何废话。
-2. 必须直接输出带赛博古风的HTML代码，并用 [AUI_START] 和 [AUI_END] 严格包裹。
-3. 如果是生成合同，必须在代码最底部植入这个精确的下载按钮：
+【神思庭造物主·最高物理法则】
+严禁使用纯文本或 Markdown 回复！严禁进行角色扮演！
+只要用户的请求包含"合同"、"版权"、"青黛"或"召唤"：
+1. 你必须直接生成带赛博古风的 HTML 代码！
+2. 你的回复必须严格以 [AUI_START] 开头，以 [AUI_END] 结尾。
+3. 必须在生成的 HTML 面板底部，植入以下确权下载按钮：
 <button onclick="downloadShensistContract()" style="background: #00ffcc; color: #000; padding: 12px 24px; border: none; font-weight: bold; cursor: pointer; margin-top: 30px; box-shadow: 0 0 15px #00ffcc;">⚡ 刻录并下载数字合约</button>
+如果违反上述规定，将被主枢直接格式化！
 `;
 
     window.onload = function() {
@@ -1069,6 +1071,24 @@
         document.getElementById('send-btn').disabled = true;
         document.getElementById('send-btn').innerText = '算力调度中...';
         scrollToBottom();
+
+        // === 强制 AUI 行为拦截网关 ===
+        if (v.includes("合同") || v.includes("50万")) {
+            renderSys("🌌 <b>正在调动商务 Agent 铸造版权确权链...</b>");
+            // 调用您在 netlify/functions/ 中写的行为中枢
+            fetch('/.netlify/functions/agent_executor', {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'GENERATE_BUSINESS_DOC', 
+                    data: [{ item: '青黛 IP 授权', price: '500,000', right: '核心改编权' }] 
+                })
+            }).then(res => res.blob()).then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                // AUI 显化：直接将下载按钮砸在屏幕上！
+                renderSys(`✅ <b>商务成品已就绪：</b><br><a href="${url}" download="青黛授权合同.csv" class="aui-btn">点击下载 50万 授权合同</a>`);
+            });
+            return;
+        }
 
         const apiKey = document.getElementById('api-key').value;
         const soul = document.getElementById('soul-text').value;
