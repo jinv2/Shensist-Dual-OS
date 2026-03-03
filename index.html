@@ -1075,12 +1075,17 @@
         // === 强制 AUI 行为拦截网关 ===
         if (v.includes("合同") || v.includes("50万")) {
             renderSys("🌌 <b>正在调动商务 Agent 铸造版权确权链...</b>");
-            // 调用您在 netlify/functions/ 中写的行为中枢
+            // 拦截网关：确保 payload 结构正确
             fetch('/.netlify/functions/agent_executor', {
                 method: 'POST',
+                // 关键：必须确保 body 字符串化，且包含后端需要的 data 字段
                 body: JSON.stringify({ 
                     action: 'GENERATE_BUSINESS_DOC', 
-                    data: [{ item: '青黛 IP 授权', price: '500,000', right: '核心改编权' }] 
+                    params: {  // 注意这里改用 params 包装，对应后端的读取逻辑
+                        data: [
+                            { item: '青黛 IP 授权', price: '500,000', right: '核心改编权' }
+                        ]
+                    }
                 })
             }).then(res => res.blob()).then(blob => {
                 const url = window.URL.createObjectURL(blob);

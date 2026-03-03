@@ -2,12 +2,14 @@
 const fs = require('fs');
 
 exports.handler = async (event) => {
-    const { action, params } = JSON.parse(event.body);
+    const body = JSON.parse(event.body || "{}");
+    const params = body.params || {}; // 增加容错
+    const data = params.data || [{ item: "默认项目", price: "0", right: "无" }]; 
     
     // 逻辑让 AI 有规则，行为让 AI 有回应 
     if (action === 'GENERATE_BUSINESS_DOC') {
         // 行为：不再回复文字，而是直接生成一个真实的 .csv (Excel可开) 文件内容
-        const csvContent = "项目,金额,权益\n" + params.data.map(d => `${d.item},${d.price},${d.right}`).join("\n");
+        const csvContent = "项目,金额,权益\n" + data.map(d => `${d.item},${d.price},${d.right}`).join("\n");
         
         // 将文件内容转为 Base64，让客户能直接下载
         return {
